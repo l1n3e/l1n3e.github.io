@@ -1,2 +1,3 @@
-# l1n3e.github.io
-blog
+# ls -la
+my blog
+my first art

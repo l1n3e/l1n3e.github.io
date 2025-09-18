@@ -1,0 +1,122 @@
+:root {
+    --code-bg: #1f2528;         /* nền code */
+    --code-fg: #d6cbb4;         /* chữ code */
+    --code-border: rgba(214,203,180,0.18);
+    --gutter-bg: #1b2124;       /* nền cột số dòng */
+    --gutter-fg: #7f786b;
+    --code-radius: 10px;
+    --code-pad-v: 12px;         /* padding dọc */
+    --code-pad-h: 16px;         /* padding ngang */
+    --line-height: 1.55;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  
+  /* Khối code tổng (Pygments .highlight/.chroma, và fallback pre code thường) */
+  .highlight,
+  .chroma,
+  pre > code {
+    background: var(--code-bg);
+    color: var(--code-fg);
+  }
+  
+  .highlight,
+  .chroma {
+    display: block;
+    border: 1px solid var(--code-border);
+    border-radius: var(--code-radius);
+    overflow: hidden;            /* để bo góc ôm viền và cột số dòng */
+    margin: 1rem 0;
+  }
+  
+  /* Bảng 2 cột (số dòng | code) */
+  .highlight table,
+  .chroma .lntable,
+  table.lntable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    display: block;
+    overflow-x: auto;            /* cuộn ngang nếu dòng dài */
+  }
+  
+  .highlight td,
+  .chroma .lntable td,
+  table.lntable td {
+    vertical-align: top;
+    padding: 0;
+    border: 0;
+  }
+  
+  /* Cột số dòng */
+  .highlight td:first-child,
+  .chroma .lntable td.lntd:first-child,
+  table.lntable td:first-child {
+    background: var(--gutter-bg);
+    color: var(--gutter-fg);
+    border-right: 1px solid var(--code-border);
+    white-space: pre;            /* giữ số dòng xuống dòng đúng */
+    user-select: none;
+    width: 1%;
+  }
+  
+  .highlight td:first-child pre,
+  .highlight td:first-child pre code,
+  .chroma .lntable td.lntd:first-child pre,
+  table.lntable td:first-child pre {
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: var(--line-height);
+    margin: 0;                   /* KHÍT: bỏ margin mặc định */
+    padding: var(--code-pad-v) calc(var(--code-pad-h) - 6px);
+    /* giảm 6px cho cảm giác cột số dòng gọn hơn */
+  }
+  
+  /* Cột code chính */
+  .highlight td:last-child pre,
+  .highlight td:last-child pre code,
+  .chroma .lntable td:last-child pre,
+  table.lntable td:last-child pre {
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: var(--line-height);
+    margin: 0;                   /* KHÍT: bỏ margin mặc định */
+    padding: var(--code-pad-v) var(--code-pad-h);
+    white-space: pre;            /* giữ spacing chuẩn cho code */
+  }
+  
+  /* Fallback cho code fence không có số dòng (chỉ <pre><code>) */
+  pre:not(.chroma):not(.highlight) {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    border: 1px solid var(--code-border);
+    border-radius: var(--code-radius);
+    padding: var(--code-pad-v) var(--code-pad-h);
+    margin: 1rem 0;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: var(--line-height);
+  }
+  
+  pre code {
+    background: transparent !important;
+    font: inherit;
+    color: inherit;
+  }
+  
+  /* Nhấn mạnh một số token cơ bản (tuỳ theme của Pygments có thể khác class) */
+  .highlight .k, .chroma .k { color: #e27d7d; }        /* keyword */
+  .highlight .s, .chroma .s { color: #c5a5c5; }        /* string  */
+  .highlight .n, .chroma .n { color: var(--code-fg); } /* name    */
+  .highlight .c, .chroma .c { color: #7d8897; }        /* comment */
+  .highlight .o, .chroma .o { color: #e2b86b; }        /* operator*/
+  
+  /* KaTeX tinh chỉnh (dark mode) */
+  .katex, .katex-display {
+    color: var(--code-fg);
+  }
+  .katex-display {
+    margin: 1rem 0 1rem 0;
+  }
+  

